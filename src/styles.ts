@@ -81,7 +81,7 @@ export default css`
   forecast-bar-column {
     display: flex;
     flex-direction: column;
-    gap: 0.25rem;
+    gap: 0.4rem;
     width: 100%;
   }
 
@@ -93,16 +93,31 @@ export default css`
     overflow: hidden;
   }
 
+  forecast-solar-row {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+  }
+
   forecast-solar-bar {
     position: relative;
-    width: 100%;
+    flex: 1;
     height: calc(var(--bar-height) * 0.6);
     border-radius: calc(var(--bar-height) * 0.3);
     overflow: hidden;
   }
 
+  forecast-solar-value {
+    flex-shrink: 0;
+    font-size: 0.75rem;
+    opacity: 0.75;
+    white-space: nowrap;
+  }
+
   forecast-solar-bar-background {
     position: absolute;
+    top: 0;
+    left: 0;
     height: 100%;
     width: 100%;
     opacity: 0.25;
@@ -111,8 +126,10 @@ export default css`
 
   forecast-solar-bar-fill {
     position: absolute;
+    top: 0;
+    left: 0;
     height: 100%;
-    width: var(--solar-bar-width);
+    width: var(--solar-bar-width, 0%);
     background: var(--energy-solar-color, #FFB300);
     opacity: 0.85;
   }

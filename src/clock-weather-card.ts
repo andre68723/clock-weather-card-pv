@@ -275,17 +275,24 @@ export class ClockWeatherCard extends LitElement {
       const entityId = solarEntities[i]
       if (!entityId) return null
       const state = this.hass.states[entityId]
-      if (!state) return null
+      if (!state) {
+        console.warn(`clock-weather-card-pv - Solar forecast entity "${entityId}" not found in hass.states`)
+        return null
+      }
       const value = parseFloat(state.state)
-      return isNaN(value) ? null : value
+      if (isNaN(value)) {
+        console.warn(`clock-weather-card-pv - Solar forecast entity "${entityId}" has non-numeric state: "${state.state}"`)
+        return null
+      }
+      return value
     })
     const validSolarValues = solarValues.filter((v): v is number => v !== null)
     const maxSolarValue = validSolarValues.length > 0 ? Math.max(...validSolarValues) : 0
 
-    return forecasts.map((forecast, i) => safeRender(() => this.renderForecastItem(forecast, minTemp, maxTemp, currentTemp, temperatureUnit, hourly, displayTexts[i], maxColOneChars, solarValues[i], maxSolarValue)))
+    return forecasts.map((forecast, i) => safeRender(() => this.renderForecastItem(forecast, minTemp, maxTemp, currentTemp, temperatureUnit, hourly, displayTexts[i], maxColOneChars, solarValues[i], maxSolarValue, solarEntities[i] ?? null)))
   }
 
-  private renderForecastItem (forecast: MergedWeatherForecast, minTemp: number, maxTemp: number, currentTemp: number | null, temperatureUnit: TemperatureUnit, hourly: boolean, displayText: string, maxColOneChars: number, solarValue: number | null, maxSolarValue: number): TemplateResult {
+  private renderForecastItem (forecast: MergedWeatherForecast, minTemp: number, maxTemp: number, currentTemp: number | null, temperatureUnit: TemperatureUnit, hourly: boolean, displayText: string, maxColOneChars: number, solarValue: number | null, maxSolarValue: number, solarEntityId: string | null): TemplateResult {
     const weatherState = forecast.condition === 'pouring' ? 'raindrops' : forecast.condition === 'rainy' ? 'raindrop' : forecast.condition
     const weatherIcon = this.toIcon(weatherState, 'fill', true, 'static')
     const tempUnit = this.getWeather().attributes.temperature_unit
@@ -300,7 +307,7 @@ export class ClockWeatherCard extends LitElement {
         ${this.renderText(this.toConfiguredTempWithUnit(tempUnit, minTempDay), 'right')}
         <forecast-bar-column>
           ${this.renderForecastTemperatureBar(minTemp, maxTemp, minTempDay, maxTempDay, isNow, currentTemp, temperatureUnit)}
-          ${solarValue !== null ? this.renderSolarForecastBar(solarValue, maxSolarValue) : ''}
+          ${solarValue !== null && solarEntityId !== null ? this.renderSolarForecastBar(solarValue, maxSolarValue, solarEntityId) : ''}
         </forecast-bar-column>
         ${this.renderText(this.toConfiguredTempWithUnit(tempUnit, maxTempDay))}
       </clock-weather-card-forecast-row>
@@ -342,13 +349,18 @@ export class ClockWeatherCard extends LitElement {
     `
   }
 
-  private renderSolarForecastBar (solarValue: number, maxSolarValue: number): TemplateResult {
+  private renderSolarForecastBar (solarValue: number, maxSolarValue: number, entityId: string): TemplateResult {
     const widthPercent = maxSolarValue > 0 ? Math.min((solarValue / maxSolarValue) * 100, 100) : 0
+    const unit = this.hass.states[entityId]?.attributes?.unit_of_measurement ?? 'kWh'
+    const displayValue = `${Math.round(solarValue * 10) / 10} ${unit}`
     return html`
-      <forecast-solar-bar>
-        <forecast-solar-bar-background></forecast-solar-bar-background>
-        <forecast-solar-bar-fill style="--solar-bar-width: ${widthPercent.toFixed(2)}%;"></forecast-solar-bar-fill>
-      </forecast-solar-bar>
+      <forecast-solar-row>
+        <forecast-solar-bar>
+          <forecast-solar-bar-background></forecast-solar-bar-background>
+          <forecast-solar-bar-fill style="--solar-bar-width: ${widthPercent.toFixed(2)}%;"></forecast-solar-bar-fill>
+        </forecast-solar-bar>
+        <forecast-solar-value>${displayValue}</forecast-solar-value>
+      </forecast-solar-row>
     `
   }
 

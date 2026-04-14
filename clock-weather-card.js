@@ -123,7 +123,7 @@ const ne=(e,t)=>"method"===t.kind&&t.descriptor&&!("value"in t.descriptor)?{...t
   forecast-bar-column {
     display: flex;
     flex-direction: column;
-    gap: 0.25rem;
+    gap: 0.4rem;
     width: 100%;
   }
 
@@ -135,16 +135,31 @@ const ne=(e,t)=>"method"===t.kind&&t.descriptor&&!("value"in t.descriptor)?{...t
     overflow: hidden;
   }
 
+  forecast-solar-row {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+  }
+
   forecast-solar-bar {
     position: relative;
-    width: 100%;
+    flex: 1;
     height: calc(var(--bar-height) * 0.6);
     border-radius: calc(var(--bar-height) * 0.3);
     overflow: hidden;
   }
 
+  forecast-solar-value {
+    flex-shrink: 0;
+    font-size: 0.75rem;
+    opacity: 0.75;
+    white-space: nowrap;
+  }
+
   forecast-solar-bar-background {
     position: absolute;
+    top: 0;
+    left: 0;
     height: 100%;
     width: 100%;
     opacity: 0.25;
@@ -153,8 +168,10 @@ const ne=(e,t)=>"method"===t.kind&&t.descriptor&&!("value"in t.descriptor)?{...t
 
   forecast-solar-bar-fill {
     position: absolute;
+    top: 0;
+    left: 0;
     height: 100%;
-    width: var(--solar-bar-width);
+    width: var(--solar-bar-width, 0%);
     background: var(--energy-solar-color, #FFB300);
     opacity: 0.85;
   }
@@ -249,16 +266,16 @@ const ne=(e,t)=>"method"===t.kind&&t.descriptor&&!("value"in t.descriptor)?{...t
             ${this.config.hide_date?"":this.date()}
           </clock-weather-card-today-right-wrap-bottom>
         </clock-weather-card-today-right-wrap>
-      </clock-weather-card-today-right>`}renderForecast(){var e;const t=this.getWeather(),i=Br(this.getCurrentTemperature()),r=this.config.forecast_rows,s=this.config.hourly_forecast,a=t.attributes.temperature_unit,n=this.mergeForecasts(r,s),o=n.map(e=>e.templow),l=n.map(e=>e.temperature);null!==i&&(o.push(i),l.push(i));const c=Math.round(Cr(o)),d=Math.round(Zr(l)),u=n.map(e=>e.datetime).map(e=>s?this.time(e):this.localize(`day.${e.weekday}`)),h=u.length?Zr(u.map(e=>e.length)):0,m=null!==(e=this.config.solar_forecast_entities)&&void 0!==e?e:[],f=n.map((e,t)=>{const i=m[t];if(!i)return null;const r=this.hass.states[i];if(!r)return null;const s=parseFloat(r.state);return isNaN(s)?null:s}),p=f.filter(e=>null!==e),y=p.length>0?Math.max(...p):0;return n.map((e,t)=>Rr(()=>this.renderForecastItem(e,c,d,i,a,s,u[t],h,f[t],y)))}renderForecastItem(e,t,i,r,s,a,n,o,l,c){const d="pouring"===e.condition?"raindrops":"rainy"===e.condition?"raindrop":e.condition,u=this.toIcon(d,"fill",!0,"static"),h=this.getWeather().attributes.temperature_unit,m=a?hl.now().hour===e.datetime.hour:hl.now().day===e.datetime.day,f=Math.round(m&&null!==r?Math.min(r,e.templow):e.templow),p=Math.round(m&&null!==r?Math.max(r,e.temperature):e.temperature);return D`
+      </clock-weather-card-today-right>`}renderForecast(){var e;const t=this.getWeather(),i=Br(this.getCurrentTemperature()),r=this.config.forecast_rows,s=this.config.hourly_forecast,a=t.attributes.temperature_unit,n=this.mergeForecasts(r,s),o=n.map(e=>e.templow),l=n.map(e=>e.temperature);null!==i&&(o.push(i),l.push(i));const c=Math.round(Cr(o)),d=Math.round(Zr(l)),u=n.map(e=>e.datetime).map(e=>s?this.time(e):this.localize(`day.${e.weekday}`)),h=u.length?Zr(u.map(e=>e.length)):0,m=null!==(e=this.config.solar_forecast_entities)&&void 0!==e?e:[],f=n.map((e,t)=>{const i=m[t];if(!i)return null;const r=this.hass.states[i];if(!r)return console.warn(`clock-weather-card-pv - Solar forecast entity "${i}" not found in hass.states`),null;const s=parseFloat(r.state);return isNaN(s)?(console.warn(`clock-weather-card-pv - Solar forecast entity "${i}" has non-numeric state: "${r.state}"`),null):s}),p=f.filter(e=>null!==e),y=p.length>0?Math.max(...p):0;return n.map((e,t)=>Rr(()=>{var r;return this.renderForecastItem(e,c,d,i,a,s,u[t],h,f[t],y,null!==(r=m[t])&&void 0!==r?r:null)}))}renderForecastItem(e,t,i,r,s,a,n,o,l,c,d){const u="pouring"===e.condition?"raindrops":"rainy"===e.condition?"raindrop":e.condition,h=this.toIcon(u,"fill",!0,"static"),m=this.getWeather().attributes.temperature_unit,f=a?hl.now().hour===e.datetime.hour:hl.now().day===e.datetime.day,p=Math.round(f&&null!==r?Math.min(r,e.templow):e.templow),y=Math.round(f&&null!==r?Math.max(r,e.temperature):e.temperature);return D`
       <clock-weather-card-forecast-row style="--col-one-size: ${.5*o}rem;">
         ${this.renderText(n)}
-        ${this.renderIcon(u)}
-        ${this.renderText(this.toConfiguredTempWithUnit(h,f),"right")}
+        ${this.renderIcon(h)}
+        ${this.renderText(this.toConfiguredTempWithUnit(m,p),"right")}
         <forecast-bar-column>
-          ${this.renderForecastTemperatureBar(t,i,f,p,m,r,s)}
-          ${null!==l?this.renderSolarForecastBar(l,c):""}
+          ${this.renderForecastTemperatureBar(t,i,p,y,f,r,s)}
+          ${null!==l&&null!==d?this.renderSolarForecastBar(l,c,d):""}
         </forecast-bar-column>
-        ${this.renderText(this.toConfiguredTempWithUnit(h,p))}
+        ${this.renderText(this.toConfiguredTempWithUnit(m,y))}
       </clock-weather-card-forecast-row>
     `}renderText(e,t="left"){return D`
       <forecast-text style="--text-align: ${t};">
@@ -277,11 +294,14 @@ const ne=(e,t)=>"method"===t.kind&&t.descriptor&&!("value"in t.descriptor)?{...t
           ${s?this.renderForecastCurrentTemp(i,r,a):""}
         </forecast-temperature-bar-range>
       </forecast-temperature-bar>
-    `}renderSolarForecastBar(e,t){const i=t>0?Math.min(e/t*100,100):0;return D`
-      <forecast-solar-bar>
-        <forecast-solar-bar-background></forecast-solar-bar-background>
-        <forecast-solar-bar-fill style="--solar-bar-width: ${i.toFixed(2)}%;"></forecast-solar-bar-fill>
-      </forecast-solar-bar>
+    `}renderSolarForecastBar(e,t,i){var r,s,a;const n=t>0?Math.min(e/t*100,100):0,o=null!==(a=null===(s=null===(r=this.hass.states[i])||void 0===r?void 0:r.attributes)||void 0===s?void 0:s.unit_of_measurement)&&void 0!==a?a:"kWh",l=`${Math.round(10*e)/10} ${o}`;return D`
+      <forecast-solar-row>
+        <forecast-solar-bar>
+          <forecast-solar-bar-background></forecast-solar-bar-background>
+          <forecast-solar-bar-fill style="--solar-bar-width: ${n.toFixed(2)}%;"></forecast-solar-bar-fill>
+        </forecast-solar-bar>
+        <forecast-solar-value>${l}</forecast-solar-value>
+      </forecast-solar-row>
     `}renderForecastCurrentTemp(e,t,i){if(null==i)return D``;return D`
       <forecast-temperature-bar-current-indicator style="--position: ${e===t?0:100/(t-e)*(i-e)}%;">
         <forecast-temperature-bar-current-indicator-dot style="--move-right: ${t===e?0:(i-e)/(t-e)}">
