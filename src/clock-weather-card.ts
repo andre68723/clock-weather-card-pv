@@ -286,8 +286,7 @@ export class ClockWeatherCard extends LitElement {
       }
       return value
     })
-    const validSolarValues = solarValues.filter((v): v is number => v !== null)
-    const maxSolarValue = validSolarValues.length > 0 ? Math.max(...validSolarValues) : 0
+    const maxSolarValue = this.config.solar_forecast_max_value
 
     return forecasts.map((forecast, i) => safeRender(() => this.renderForecastItem(forecast, minTemp, maxTemp, currentTemp, temperatureUnit, hourly, displayTexts[i], maxColOneChars, solarValues[i], maxSolarValue, solarEntities[i] ?? null)))
   }
@@ -300,6 +299,10 @@ export class ClockWeatherCard extends LitElement {
     const minTempDay = Math.round(isNow && currentTemp !== null ? Math.min(currentTemp, forecast.templow) : forecast.templow)
     const maxTempDay = Math.round(isNow && currentTemp !== null ? Math.max(currentTemp, forecast.temperature) : forecast.temperature)
 
+    const solarDisplayValue = solarValue !== null && solarEntityId !== null
+      ? `${Math.round(solarValue * 10) / 10} ${this.hass.states[solarEntityId]?.attributes?.unit_of_measurement ?? 'kWh'}`
+      : null
+
     return html`
       <clock-weather-card-forecast-row style="--col-one-size: ${(maxColOneChars * 0.5)}rem;">
         ${this.renderText(displayText)}
@@ -307,9 +310,12 @@ export class ClockWeatherCard extends LitElement {
         ${this.renderText(this.toConfiguredTempWithUnit(tempUnit, minTempDay), 'right')}
         <forecast-bar-column>
           ${this.renderForecastTemperatureBar(minTemp, maxTemp, minTempDay, maxTempDay, isNow, currentTemp, temperatureUnit)}
-          ${solarValue !== null && solarEntityId !== null ? this.renderSolarForecastBar(solarValue, maxSolarValue, solarEntityId) : ''}
+          ${solarValue !== null ? this.renderSolarForecastBar(solarValue, maxSolarValue) : ''}
         </forecast-bar-column>
-        ${this.renderText(this.toConfiguredTempWithUnit(tempUnit, maxTempDay))}
+        <forecast-right-column>
+          <forecast-text style="--text-align: right;">${this.toConfiguredTempWithUnit(tempUnit, maxTempDay)}</forecast-text>
+          ${solarDisplayValue !== null ? html`<forecast-solar-text>${solarDisplayValue}</forecast-solar-text>` : ''}
+        </forecast-right-column>
       </clock-weather-card-forecast-row>
     `
   }
@@ -349,18 +355,13 @@ export class ClockWeatherCard extends LitElement {
     `
   }
 
-  private renderSolarForecastBar (solarValue: number, maxSolarValue: number, entityId: string): TemplateResult {
+  private renderSolarForecastBar (solarValue: number, maxSolarValue: number): TemplateResult {
     const widthPercent = maxSolarValue > 0 ? Math.min((solarValue / maxSolarValue) * 100, 100) : 0
-    const unit = this.hass.states[entityId]?.attributes?.unit_of_measurement ?? 'kWh'
-    const displayValue = `${Math.round(solarValue * 10) / 10} ${unit}`
     return html`
-      <forecast-solar-row>
-        <forecast-solar-bar>
-          <forecast-solar-bar-background></forecast-solar-bar-background>
-          <forecast-solar-bar-fill style="--solar-bar-width: ${widthPercent.toFixed(2)}%;"></forecast-solar-bar-fill>
-        </forecast-solar-bar>
-        <forecast-solar-value>${displayValue}</forecast-solar-value>
-      </forecast-solar-row>
+      <forecast-solar-bar>
+        <forecast-solar-bar-background></forecast-solar-bar-background>
+        <forecast-solar-bar-fill style="--solar-bar-width: ${widthPercent.toFixed(2)}%;"></forecast-solar-bar-fill>
+      </forecast-solar-bar>
     `
   }
 
@@ -504,7 +505,8 @@ export class ClockWeatherCard extends LitElement {
       show_decimal: config.show_decimal ?? false,
       apparent_sensor: config.apparent_sensor ?? undefined,
       aqi_sensor: config.aqi_sensor ?? undefined,
-      solar_forecast_entities: config.solar_forecast_entities
+      solar_forecast_entities: config.solar_forecast_entities,
+      solar_forecast_max_value: config.solar_forecast_max_value ?? 70
     }
   }
 

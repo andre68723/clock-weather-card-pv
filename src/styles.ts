@@ -56,13 +56,15 @@ export default css`
   }
 
   clock-weather-card-forecast {
-    display: block;
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
   }
 
   clock-weather-card-forecast-row {
     display: grid;
-    grid-template-columns: var(--col-one-size) 2rem 2.1rem auto 2.1rem;
-    align-items: center;
+    grid-template-columns: var(--col-one-size) 2rem 2.1rem 1fr auto;
+    align-items: start;
     grid-gap: 0.5rem;
   }
 
@@ -70,12 +72,14 @@ export default css`
     text-align: var(--text-align);
     white-space: nowrap;
     text-overflow: clip;
+    line-height: var(--bar-height);
   }
 
   forecast-icon {
     display: flex;
     align-items: center;
     justify-content: center;
+    height: var(--bar-height);
   }
 
   forecast-bar-column {
@@ -83,6 +87,20 @@ export default css`
     flex-direction: column;
     gap: 0.4rem;
     width: 100%;
+  }
+
+  forecast-right-column {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    align-items: flex-end;
+  }
+
+  forecast-solar-text {
+    line-height: calc(var(--bar-height) * 0.6);
+    font-size: 0.75rem;
+    opacity: 0.75;
+    white-space: nowrap;
   }
 
   forecast-temperature-bar {
@@ -93,25 +111,12 @@ export default css`
     overflow: hidden;
   }
 
-  forecast-solar-row {
-    display: flex;
-    align-items: center;
-    gap: 0.4rem;
-  }
-
   forecast-solar-bar {
     position: relative;
-    flex: 1;
+    width: 100%;
     height: calc(var(--bar-height) * 0.6);
     border-radius: calc(var(--bar-height) * 0.3);
     overflow: hidden;
-  }
-
-  forecast-solar-value {
-    flex-shrink: 0;
-    font-size: 0.75rem;
-    opacity: 0.75;
-    white-space: nowrap;
   }
 
   forecast-solar-bar-background {

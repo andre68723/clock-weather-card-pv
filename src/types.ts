@@ -34,6 +34,7 @@ export interface ClockWeatherCardConfig extends LovelaceCardConfig {
   apparent_sensor?: string
   aqi_sensor?: string
   solar_forecast_entities?: string[]
+  solar_forecast_max_value?: number
 }
 
 export interface MergedClockWeatherCardConfig extends LovelaceCardConfig {
@@ -61,6 +62,7 @@ export interface MergedClockWeatherCardConfig extends LovelaceCardConfig {
   apparent_sensor?: string
   aqi_sensor?: string
   solar_forecast_entities?: string[]
+  solar_forecast_max_value: number
 }
 
 export const enum WeatherEntityFeature {
