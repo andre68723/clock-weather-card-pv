@@ -270,10 +270,22 @@ export class ClockWeatherCard extends LitElement {
       .map(d => hourly ? this.time(d) : this.localize(`day.${d.weekday}`))
     const maxColOneChars = displayTexts.length ? max(displayTexts.map(t => t.length)) : 0
 
-    return forecasts.map((forecast, i) => safeRender(() => this.renderForecastItem(forecast, minTemp, maxTemp, currentTemp, temperatureUnit, hourly, displayTexts[i], maxColOneChars)))
+    const solarEntities = this.config.solar_forecast_entities ?? []
+    const solarValues: (number | null)[] = forecasts.map((_, i) => {
+      const entityId = solarEntities[i]
+      if (!entityId) return null
+      const state = this.hass.states[entityId]
+      if (!state) return null
+      const value = parseFloat(state.state)
+      return isNaN(value) ? null : value
+    })
+    const validSolarValues = solarValues.filter((v): v is number => v !== null)
+    const maxSolarValue = validSolarValues.length > 0 ? Math.max(...validSolarValues) : 0
+
+    return forecasts.map((forecast, i) => safeRender(() => this.renderForecastItem(forecast, minTemp, maxTemp, currentTemp, temperatureUnit, hourly, displayTexts[i], maxColOneChars, solarValues[i], maxSolarValue)))
   }
 
-  private renderForecastItem (forecast: MergedWeatherForecast, minTemp: number, maxTemp: number, currentTemp: number | null, temperatureUnit: TemperatureUnit, hourly: boolean, displayText: string, maxColOneChars: number): TemplateResult {
+  private renderForecastItem (forecast: MergedWeatherForecast, minTemp: number, maxTemp: number, currentTemp: number | null, temperatureUnit: TemperatureUnit, hourly: boolean, displayText: string, maxColOneChars: number, solarValue: number | null, maxSolarValue: number): TemplateResult {
     const weatherState = forecast.condition === 'pouring' ? 'raindrops' : forecast.condition === 'rainy' ? 'raindrop' : forecast.condition
     const weatherIcon = this.toIcon(weatherState, 'fill', true, 'static')
     const tempUnit = this.getWeather().attributes.temperature_unit
@@ -286,7 +298,10 @@ export class ClockWeatherCard extends LitElement {
         ${this.renderText(displayText)}
         ${this.renderIcon(weatherIcon)}
         ${this.renderText(this.toConfiguredTempWithUnit(tempUnit, minTempDay), 'right')}
-        ${this.renderForecastTemperatureBar(minTemp, maxTemp, minTempDay, maxTempDay, isNow, currentTemp, temperatureUnit)}
+        <forecast-bar-column>
+          ${this.renderForecastTemperatureBar(minTemp, maxTemp, minTempDay, maxTempDay, isNow, currentTemp, temperatureUnit)}
+          ${solarValue !== null ? this.renderSolarForecastBar(solarValue, maxSolarValue) : ''}
+        </forecast-bar-column>
         ${this.renderText(this.toConfiguredTempWithUnit(tempUnit, maxTempDay))}
       </clock-weather-card-forecast-row>
     `
@@ -324,6 +339,16 @@ export class ClockWeatherCard extends LitElement {
           ${isNow ? this.renderForecastCurrentTemp(minTempDay, maxTempDay, currentTemp) : ''}
         </forecast-temperature-bar-range>
       </forecast-temperature-bar>
+    `
+  }
+
+  private renderSolarForecastBar (solarValue: number, maxSolarValue: number): TemplateResult {
+    const widthPercent = maxSolarValue > 0 ? Math.min((solarValue / maxSolarValue) * 100, 100) : 0
+    return html`
+      <forecast-solar-bar>
+        <forecast-solar-bar-background></forecast-solar-bar-background>
+        <forecast-solar-bar-fill style="--solar-bar-width: ${widthPercent.toFixed(2)}%;"></forecast-solar-bar-fill>
+      </forecast-solar-bar>
     `
   }
 
@@ -466,7 +491,8 @@ export class ClockWeatherCard extends LitElement {
       time_zone: config.time_zone ?? undefined,
       show_decimal: config.show_decimal ?? false,
       apparent_sensor: config.apparent_sensor ?? undefined,
-      aqi_sensor: config.aqi_sensor ?? undefined
+      aqi_sensor: config.aqi_sensor ?? undefined,
+      solar_forecast_entities: config.solar_forecast_entities
     }
   }
 

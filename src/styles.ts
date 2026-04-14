@@ -78,12 +78,43 @@ export default css`
     justify-content: center;
   }
 
+  forecast-bar-column {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    width: 100%;
+  }
+
   forecast-temperature-bar {
     position: relative;
     width: 100%;
     height: var(--bar-height);
     border-radius: calc(var(--bar-height) / 2);
     overflow: hidden;
+  }
+
+  forecast-solar-bar {
+    position: relative;
+    width: 100%;
+    height: calc(var(--bar-height) * 0.6);
+    border-radius: calc(var(--bar-height) * 0.3);
+    overflow: hidden;
+  }
+
+  forecast-solar-bar-background {
+    position: absolute;
+    height: 100%;
+    width: 100%;
+    opacity: 0.25;
+    background: var(--energy-solar-color, #FFB300);
+  }
+
+  forecast-solar-bar-fill {
+    position: absolute;
+    height: 100%;
+    width: var(--solar-bar-width);
+    background: var(--energy-solar-color, #FFB300);
+    opacity: 0.85;
   }
 
   forecast-temperature-bar-background {
